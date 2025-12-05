@@ -42,6 +42,16 @@ class NumberLink:
         for par_id, pontos in self.pares.items():
             print(f"  Par {par_id}: {pontos[0]} -> {pontos[1]}")
     
+    def distancia_manhattan(self, p1, p2):
+        """
+        Calcula distância de Manhattan entre dois pontos
+        |x1 - x2| + |y1 - y2|
+        """
+        return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
+    
+    def is_valid_position(self, x, y):
+        """Verifica se posição está dentro dos limites"""
+        return 0 <= x < self.n and 0 <= y < self.m
 
 # Puzzle 6x6 complexo
 print("\n\nPuzzle 6x6")
@@ -53,3 +63,5 @@ pares3 = {
 }
 puzzle3 = NumberLink(6, 6, pares3)
 puzzle3.display()
+
+print(puzzle3.distancia_manhattan((0, 1), (5, 1)))
