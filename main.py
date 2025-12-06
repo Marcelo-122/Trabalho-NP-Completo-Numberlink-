@@ -1,57 +1,56 @@
-class NumberLink:
-    def __init__(self, n, m, pares):
-        """
-        Inicializa o jogo NumberLink
+from game import NumberLink
+from priorityQueue import PriorityQueue,Node
+
+class Automato:
+    def __init__(self, game:NumberLink, pq_pares:list[int]):
+        self.game = game
+        self.pq_pares = pq_pares
+        self.solucao = None
+        pos_inicial = self.game.pares[pq_pares[0]][0]
+        self.visited = set()        # controla estados visitados
+        self.test = 0
+        print(self.DFS([linha[:] for linha in game.grid], 0, pos_inicial))
+
+    def hash_grid(self, grid):
+        return tuple(tuple(row) for row in grid)
+
+    def DFS(self, grid, par_index, pos_atual):
+
+        # cria um estado hashable
+        state = (self.hash_grid(grid), par_index, pos_atual)
+
+        # evita loops e repetição
+        if state in self.visited:
+            return False
+        self.visited.add(state)
+
+        # se terminou
+        if par_index == len(self.pq_pares):
+            self.solucao = grid
+            return True
+
+        par_id = self.pq_pares[par_index]
+        destino = self.game.pares[par_id][1]
+
+        # chegou no destino → próximo par
+        if pos_atual == destino:
+            next_start = self.game.pares[self.pq_pares[par_index+1]][0]
+            return self.DFS([linha[:] for linha in grid], par_index + 1, next_start)
+
+        actions = [self.game.esquerda, self.game.direita, self.game.cima, self.game.baixo]
+
+        for action in actions:
+            try:
+                new_grid, _, cur_pos = action([linha[:] for linha in grid], pos_atual, par_id)
+            except:
+                continue
+            self.test += 1
+            
+            if self.DFS(new_grid, par_index, cur_pos):
+                return True
         
-        Args:
-            n: altura do grid
-            m: largura do grid
-            pares: dicionário {id: [(x1, y1), (x2, y2)]}
-                   onde cada id representa um par de pontos a conectar
-        """
-        self.n = n
-        self.m = m
-        self.grid = [[0] * m for _ in range(n)]
-        self.pares = pares
-        
-        # Coloca os pontos terminais no grid
-        for par_id, pontos in pares.items():
-            inicio, fim = pontos
-            self.grid[inicio[0]][inicio[1]] = par_id
-            self.grid[fim[0]][fim[1]] = par_id
-    
-    def display(self):
-        """Exibe o grid de forma visual"""
-        print("=" * (self.m * 4 + 1))
-        
-        for i in range(self.n):
-            linha = "|"
-            for j in range(self.m):
-                valor = self.grid[i][j]
-                if valor == 0:
-                    linha += " . "
-                else:
-                    linha += f" {valor} "
-                linha += "|"
-            print(linha)
-            print("-" * (self.m * 4 + 1))
-        
-        print(f"\nDimensões: {self.n}x{self.m}")
-        print(f"Pares a conectar: {len(self.pares)}")
-        print("\nPares:")
-        for par_id, pontos in self.pares.items():
-            print(f"  Par {par_id}: {pontos[0]} -> {pontos[1]}")
-    
-    def distancia_manhattan(self, p1, p2):
-        """
-        Calcula distância de Manhattan entre dois pontos
-        |x1 - x2| + |y1 - y2|
-        """
-        return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
-    
-    def is_valid_position(self, x, y):
-        """Verifica se posição está dentro dos limites"""
-        return 0 <= x < self.n and 0 <= y < self.m
+        return False
+              
 
 # Puzzle 6x6 complexo
 print("\n\nPuzzle 6x6")
@@ -61,7 +60,15 @@ pares3 = {
     3: [(2, 2), (4, 4)],
     4: [(0, 4), (3, 0)],
 }
-puzzle3 = NumberLink(6, 6, pares3)
-puzzle3.display()
+game = NumberLink(6, 6, pares3)
+pq = PriorityQueue()
+for par_id in game.pares.keys():
+    p1 = game.pares[par_id][0]
+    p2 = game.pares[par_id][1]
+    pq.enqueue(Node(p1,p2,par_id))
+pq_pares = [pq.dequeue().id for _ in range(len(pq.items))]
+automato = Automato(game,pq_pares)
+if(automato.solucao != None):
+    automato.game.display(automato.solucao)
 
-print(puzzle3.distancia_manhattan((0, 1), (5, 1)))
+
