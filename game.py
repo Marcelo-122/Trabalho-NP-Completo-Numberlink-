@@ -1,136 +1,64 @@
 class NumberLink:
-    def __init__(self, ql, qc, pares:dict):
-        """
-        Inicializa o jogo NumberLink
-        
-        Args:
-            ql: qtd_linhas,
-            qc: qtd_colunas,
-            pares: dicionário {id: [(x1, y1), (x2, y2)]}
-                   onde cada id representa um par de pontos a conectar
-        """
+    def __init__(self, ql, qc, pares: dict):
         self.qtd_linhas = ql
         self.qtd_colunas = qc
         self.grid = [[0] * qc for _ in range(ql)]
-        self.pares = pares        
-        # Coloca os pontos terminais no grid
+        self.pares = pares
+        self.endpoints = set() 
+        
+        # Mapeia endpoints para verificação rápida
         for par_id, pontos in pares.items():
             inicio, fim = pontos
             self.grid[inicio[0]][inicio[1]] = par_id
             self.grid[fim[0]][fim[1]] = par_id
+            self.endpoints.add(inicio)
+            self.endpoints.add(fim)
 
-    def esquerda(self, grid, ponto_inicial:tuple[int,int], par_id:int):
-        """
-            Realiza movimento para a esquerda:
-            Args:
-                grid = grid_atual,
-                ponto_inicial = (linha, coluna)
-                par_id = int -> pontos para conexão
-            Retorno:
-                novo_grid,
-                pares_conexos: [par_id],
-                ponto_atual: (linha, coluna)
-        """
+    def is_valid_move(self, linha, coluna, par_id):
+        # 1. Limites do mapa
+        if not (0 <= linha < self.qtd_linhas and 0 <= coluna < self.qtd_colunas):
+            return False
+        
+        val = self.grid[linha][coluna]
+        
+        # 2. Célula vazia é válida
+        if val == 0:
+            return True
+        
+        # 3. Se for o ID do próprio par, só é válido se for o ENDPOINT (destino)
+        # Se for rastro (caminho já passado), é inválido (ciclo)
+        if val == par_id:
+            if (linha, coluna) in self.endpoints:
+                return True
+            
+        return False
 
-        nlinha, ncoluna = ponto_inicial[0], ponto_inicial[1]-1
-        simb = str(par_id)+'⬅️'
-        if(not self.is_valid_position(nlinha, ncoluna)): raise Exception("[ERRO] Movimento Inválido, ultrapassando grid")
-        if(grid[nlinha][ncoluna] not in [0, simb, par_id]): raise Exception("[ERRO] Posição já preenchida")
-        
-        novo_grid = [linha[:] for linha in grid]
-        novo_grid[nlinha][ncoluna] = simb
-        
-        return novo_grid, (nlinha, ncoluna)
-    
-    def direita(self, grid, ponto_inicial:tuple[int,int], par_id:int):
+    def count_free_neighbors(self, linha, coluna):
         """
-            Realiza movimento para a direita:
-            Args:
-                grid = grid_atual,
-                ponto_inicial = (linha, coluna)
-                par_id = int -> pontos para conexão
-            Retorno:
-                novo_grid,
-                pares_conexos: [par_id],
-                ponto_atual: (linha, coluna)
+        Conta vizinhos livres para a heurística de isolamento.
+        Retorna quantos movimentos válidos existem a partir de (linha, coluna).
         """
-        nlinha, ncoluna = ponto_inicial[0], ponto_inicial[1]+1
-        simb = str(par_id) + '➡️'
-        if(not self.is_valid_position(nlinha, ncoluna)): raise Exception("[ERRO] Movimento Inválido, ultrapassando grid")
-        if(grid[nlinha][ncoluna] not in [0, simb, par_id]): raise Exception("[ERRO] Posição já preenchida")
+        livres = 0
+        meu_id = self.grid[linha][coluna]
         
-        novo_grid = [linha[:] for linha in grid]
-        novo_grid[nlinha][ncoluna] = simb
-    
-        return novo_grid, (nlinha, ncoluna)
+        for dl, dc in [(-1,0), (1,0), (0,-1), (0,1)]:
+            nl, nc = linha + dl, coluna + dc
+            if 0 <= nl < self.qtd_linhas and 0 <= nc < self.qtd_colunas:
+                val = self.grid[nl][nc]
+                if val == 0:
+                    livres += 1
+                elif val == meu_id and (nl, nc) in self.endpoints:
+                    livres += 1
+        return livres
 
-    def cima(self, grid, ponto_inicial:tuple[int,int], par_id:int):
-        """
-            Realiza movimento para a cima:
-            Args:
-                grid = grid_atual,
-                ponto_inicial = (linha, coluna)
-                par_id = int -> pontos para conexão
-            Retorno:
-                novo_grid,
-                pares_conexos: [par_id],
-                ponto_atual: (linha, coluna)
-        """
-
-        nlinha, ncoluna = ponto_inicial[0]-1, ponto_inicial[1]
-        simb = str(par_id)+'⬆️'
-        if(not self.is_valid_position(nlinha, ncoluna)): raise Exception("[ERRO] Movimento Inválido, ultrapassando grid")
-        if(grid[nlinha][ncoluna] not in [0,simb, par_id]): raise Exception("[ERRO] Posição já preenchida")
-        
-        novo_grid = [linha[:] for linha in grid]
-        novo_grid[nlinha][ncoluna] = simb
-        
-        return novo_grid, (nlinha, ncoluna)
-    
-    def baixo(self, grid, ponto_inicial:tuple[int,int], par_id:int):
-        """
-            Realiza movimento para a baixo:
-            Args:
-                grid = grid_atual,
-                ponto_inicial = (linha, coluna)
-                par_id = int -> pontos para conexão
-            Retorno:
-                novo_grid,
-                pares_conexos: [par_id],
-                ponto_atual: (linha, coluna)
-        """
-        nlinha, ncoluna = ponto_inicial[0]+1, ponto_inicial[1]
-        simb = str(par_id)+'⬇️'
-        if(not self.is_valid_position(nlinha, ncoluna)): raise Exception("[ERRO] Movimento Inválido, ultrapassando grid")
-        if(grid[nlinha][ncoluna] not in [0, simb, par_id]): raise Exception("[ERRO] Posição já preenchida")
-        
-        novo_grid = [linha[:] for linha in grid]
-        novo_grid[nlinha][ncoluna] = simb
-        
-        return novo_grid, (nlinha, ncoluna)
- 
-    def display(self, grid):
-        """Exibe o grid de forma visual"""
-        print("=" * (self.qtd_linhas * 4 + 1))
-        
+    def display(self):
+        print("=" * (self.qtd_colunas * 3 + 1))
         for i in range(self.qtd_linhas):
-            linha = "|"
+            linha_str = "|"
             for j in range(self.qtd_colunas):
-                valor = grid[i][j]
-                if valor == 0:
-                    linha += " . "
-                else:
-                    linha += f" {valor} "
-                linha += "|"
-            print(linha)
-            print("-" * (self.qtd_linhas * 4 + 1))
-        
-        # print(f"\nDimensões: {self.qtd_linhas}x{self.qtd_colunas}")
-        # print(f"Pares a conectar: {len(self.pares)}")
-        # print("\nPares:")
-        # for par_id, pontos in self.pares.items():
-        #     print(f"  Par {par_id}: {pontos[0]} -> {pontos[1]}")
-    
-    def is_valid_position(self, linha, coluna):
-        """Verifica se posição está dentro dos limites"""
-        return (coluna >=0 and coluna < self.qtd_colunas) and (linha >= 0 and linha < self.qtd_linhas)
+                val = self.grid[i][j]
+                # Formatação visual simples
+                if val == 0: linha_str += " . "
+                else: linha_str += f" {val} "
+            print(linha_str + "|")
+        print("=" * (self.qtd_colunas * 3 + 1))
