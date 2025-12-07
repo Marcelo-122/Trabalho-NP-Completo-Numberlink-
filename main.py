@@ -31,7 +31,7 @@ class Automato:
             print(f"\n❌ Falha após {self.passos} passos.")
 
     def solve(self, par_index, pos_atual):
-        # draw_grid_live(self.game.grid, delay=0.01)  # Visualização ao vivo, caso queria só descomente.
+        # draw_grid_live(self.game, delay=0.01)  # Visualização ao vivo, caso queria só descomente.
         """Recursão principal (Backtracking)."""
         self.passos += 1
         
