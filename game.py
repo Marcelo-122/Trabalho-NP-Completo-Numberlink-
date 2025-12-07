@@ -33,11 +33,12 @@ class NumberLink:
         """
 
         nlinha, ncoluna = ponto_inicial[0], ponto_inicial[1]-1
+        simb = str(par_id)+'⬅️'
         if(not self.is_valid_position(nlinha, ncoluna)): raise Exception("[ERRO] Movimento Inválido, ultrapassando grid")
-        if(grid[nlinha][ncoluna] not in [0, par_id]): raise Exception("[ERRO] Posição já preenchida")
+        if(grid[nlinha][ncoluna] not in [0, simb, par_id]): raise Exception("[ERRO] Posição já preenchida")
         
         novo_grid = [linha[:] for linha in grid]
-        novo_grid[nlinha][ncoluna] = par_id
+        novo_grid[nlinha][ncoluna] = simb
         
         return novo_grid, (nlinha, ncoluna)
     
@@ -54,12 +55,12 @@ class NumberLink:
                 ponto_atual: (linha, coluna)
         """
         nlinha, ncoluna = ponto_inicial[0], ponto_inicial[1]+1
-        
+        simb = str(par_id) + '➡️'
         if(not self.is_valid_position(nlinha, ncoluna)): raise Exception("[ERRO] Movimento Inválido, ultrapassando grid")
-        if(grid[nlinha][ncoluna] not in (0, par_id)): raise Exception("[ERRO] Posição já preenchida")
+        if(grid[nlinha][ncoluna] not in [0, simb, par_id]): raise Exception("[ERRO] Posição já preenchida")
         
         novo_grid = [linha[:] for linha in grid]
-        novo_grid[nlinha][ncoluna] = par_id
+        novo_grid[nlinha][ncoluna] = simb
     
         return novo_grid, (nlinha, ncoluna)
 
@@ -77,12 +78,12 @@ class NumberLink:
         """
 
         nlinha, ncoluna = ponto_inicial[0]-1, ponto_inicial[1]
-        
+        simb = str(par_id)+'⬆️'
         if(not self.is_valid_position(nlinha, ncoluna)): raise Exception("[ERRO] Movimento Inválido, ultrapassando grid")
-        if(grid[nlinha][ncoluna] not in (0, par_id)): raise Exception("[ERRO] Posição já preenchida")
+        if(grid[nlinha][ncoluna] not in [0,simb, par_id]): raise Exception("[ERRO] Posição já preenchida")
         
         novo_grid = [linha[:] for linha in grid]
-        novo_grid[nlinha][ncoluna] = par_id
+        novo_grid[nlinha][ncoluna] = simb
         
         return novo_grid, (nlinha, ncoluna)
     
@@ -99,12 +100,12 @@ class NumberLink:
                 ponto_atual: (linha, coluna)
         """
         nlinha, ncoluna = ponto_inicial[0]+1, ponto_inicial[1]
-        
+        simb = str(par_id)+'⬇️'
         if(not self.is_valid_position(nlinha, ncoluna)): raise Exception("[ERRO] Movimento Inválido, ultrapassando grid")
-        if(grid[nlinha][ncoluna] not in (0, par_id)): raise Exception("[ERRO] Posição já preenchida")
+        if(grid[nlinha][ncoluna] not in [0, simb, par_id]): raise Exception("[ERRO] Posição já preenchida")
         
         novo_grid = [linha[:] for linha in grid]
-        novo_grid[nlinha][ncoluna] = par_id
+        novo_grid[nlinha][ncoluna] = simb
         
         return novo_grid, (nlinha, ncoluna)
  
