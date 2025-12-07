@@ -7,33 +7,25 @@ class Automato:
         self.pq_pares = pq_pares
         self.solucao = None
         pos_inicial = self.game.pares[pq_pares[0]][0]
-        self.visited = set()        # controla estados visitados
-        self.test = 0
+        self.visited = set()
         print(self.DFS([linha[:] for linha in game.grid], 0, pos_inicial))
 
     def hash_grid(self, grid):
         return tuple(tuple(row) for row in grid)
 
     def DFS(self, grid, par_index, pos_atual):
-
-        # cria um estado hashable
-        state = (self.hash_grid(grid), par_index, pos_atual)
-
-        # evita loops e repetição
-        if state in self.visited:
-            return False
+        state = (self.hash_grid(grid), par_index)
+        if state in self.visited: return False
         self.visited.add(state)
-
-        # se terminou
-        if par_index == len(self.pq_pares):
-            self.solucao = grid
-            return True
 
         par_id = self.pq_pares[par_index]
         destino = self.game.pares[par_id][1]
 
         # chegou no destino → próximo par
         if pos_atual == destino:
+            if par_index == len(self.pq_pares)-1:
+                self.solucao = grid
+                return True
             next_start = self.game.pares[self.pq_pares[par_index+1]][0]
             return self.DFS([linha[:] for linha in grid], par_index + 1, next_start)
 
@@ -41,14 +33,12 @@ class Automato:
 
         for action in actions:
             try:
-                new_grid, _, cur_pos = action([linha[:] for linha in grid], pos_atual, par_id)
+                new_grid, cur_pos = action([linha[:] for linha in grid], pos_atual, par_id)
             except:
                 continue
-            self.test += 1
             
             if self.DFS(new_grid, par_index, cur_pos):
                 return True
-        
         return False
               
 
@@ -70,5 +60,3 @@ pq_pares = [pq.dequeue().id for _ in range(len(pq.items))]
 automato = Automato(game,pq_pares)
 if(automato.solucao != None):
     automato.game.display(automato.solucao)
-
-

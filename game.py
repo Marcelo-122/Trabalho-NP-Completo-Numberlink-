@@ -12,9 +12,7 @@ class NumberLink:
         self.qtd_linhas = ql
         self.qtd_colunas = qc
         self.grid = [[0] * qc for _ in range(ql)]
-        self.pares = pares
-        self.pares_conexos = []
-        
+        self.pares = pares        
         # Coloca os pontos terminais no grid
         for par_id, pontos in pares.items():
             inicio, fim = pontos
@@ -35,20 +33,17 @@ class NumberLink:
         """
 
         nlinha, ncoluna = ponto_inicial[0], ponto_inicial[1]-1
-        pares_conexos = self.pares_conexos[:]
         if(not self.is_valid_position(nlinha, ncoluna)): raise Exception("[ERRO] Movimento Inválido, ultrapassando grid")
         if(grid[nlinha][ncoluna] not in [0, par_id]): raise Exception("[ERRO] Posição já preenchida")
         
         novo_grid = [linha[:] for linha in grid]
         novo_grid[nlinha][ncoluna] = par_id
         
-        if(self.pares[par_id][1] == (nlinha, ncoluna)): pares_conexos.append(par_id)
-
-        return novo_grid, pares_conexos, (nlinha, ncoluna)
+        return novo_grid, (nlinha, ncoluna)
     
     def direita(self, grid, ponto_inicial:tuple[int,int], par_id:int):
         """
-            Realiza movimento para a esquerda:
+            Realiza movimento para a direita:
             Args:
                 grid = grid_atual,
                 ponto_inicial = (linha, coluna)
@@ -59,22 +54,18 @@ class NumberLink:
                 ponto_atual: (linha, coluna)
         """
         nlinha, ncoluna = ponto_inicial[0], ponto_inicial[1]+1
-
-        pares_conexos = self.pares_conexos[:]
         
         if(not self.is_valid_position(nlinha, ncoluna)): raise Exception("[ERRO] Movimento Inválido, ultrapassando grid")
         if(grid[nlinha][ncoluna] not in (0, par_id)): raise Exception("[ERRO] Posição já preenchida")
         
         novo_grid = [linha[:] for linha in grid]
         novo_grid[nlinha][ncoluna] = par_id
-        
-        if(self.pares[par_id][1] == (nlinha, ncoluna)): pares_conexos.append(par_id)
-
-        return novo_grid, pares_conexos, (nlinha, ncoluna)
+    
+        return novo_grid, (nlinha, ncoluna)
 
     def cima(self, grid, ponto_inicial:tuple[int,int], par_id:int):
         """
-            Realiza movimento para a esquerda:
+            Realiza movimento para a cima:
             Args:
                 grid = grid_atual,
                 ponto_inicial = (linha, coluna)
@@ -86,8 +77,6 @@ class NumberLink:
         """
 
         nlinha, ncoluna = ponto_inicial[0]-1, ponto_inicial[1]
-
-        pares_conexos = self.pares_conexos[:]
         
         if(not self.is_valid_position(nlinha, ncoluna)): raise Exception("[ERRO] Movimento Inválido, ultrapassando grid")
         if(grid[nlinha][ncoluna] not in (0, par_id)): raise Exception("[ERRO] Posição já preenchida")
@@ -95,13 +84,11 @@ class NumberLink:
         novo_grid = [linha[:] for linha in grid]
         novo_grid[nlinha][ncoluna] = par_id
         
-        if(self.pares[par_id][1] == (nlinha, ncoluna)): pares_conexos.append(par_id)
-
-        return novo_grid, pares_conexos, (nlinha, ncoluna)
+        return novo_grid, (nlinha, ncoluna)
     
     def baixo(self, grid, ponto_inicial:tuple[int,int], par_id:int):
         """
-            Realiza movimento para a esquerda:
+            Realiza movimento para a baixo:
             Args:
                 grid = grid_atual,
                 ponto_inicial = (linha, coluna)
@@ -112,8 +99,6 @@ class NumberLink:
                 ponto_atual: (linha, coluna)
         """
         nlinha, ncoluna = ponto_inicial[0]+1, ponto_inicial[1]
-
-        pares_conexos = self.pares_conexos[:]
         
         if(not self.is_valid_position(nlinha, ncoluna)): raise Exception("[ERRO] Movimento Inválido, ultrapassando grid")
         if(grid[nlinha][ncoluna] not in (0, par_id)): raise Exception("[ERRO] Posição já preenchida")
@@ -121,9 +106,7 @@ class NumberLink:
         novo_grid = [linha[:] for linha in grid]
         novo_grid[nlinha][ncoluna] = par_id
         
-        if(self.pares[par_id][1] == (nlinha, ncoluna)): pares_conexos.append(par_id)
-
-        return novo_grid, pares_conexos, (nlinha, ncoluna)
+        return novo_grid, (nlinha, ncoluna)
  
     def display(self, grid):
         """Exibe o grid de forma visual"""
