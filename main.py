@@ -1,92 +1,60 @@
 from game import NumberLink
-from priorityQueue import PriorityQueue, Node
 from visualizer import draw_grid_live
 import sys
 import time
+import random
 
-# Aumenta o limite de recursão para permitir caminhos longos em grids complexos
-sys.setrecursionlimit(20000)
+# Aumenta limite para suportar a profundidade da recursão em grids complexos
+sys.setrecursionlimit(50000)
 
 class Automato:
     """
-    Agente solucionador que utiliza Busca em Profundidade (DFS) com Backtracking
-    e poda baseada em heurística de isolamento.
+    Solver que utiliza Backtracking com poda via BFS e ordenação heurística.
     """
     def __init__(self, game: NumberLink, pq_pares: list[int]):
         self.game = game
-        self.pq_pares = pq_pares # Lista ordenada de prioridade dos pares a resolver
+        self.pq_pares = pq_pares
         self.passos = 0
         self.start_time = time.time()
+        self.sucesso = False # Flag para indicar se resolveu
         
-        # Inicia a recursão a partir do primeiro par da lista
-        primeiro_par = pq_pares[0]
-        pos_inicial = self.game.pares[primeiro_par][0]
+        primeiro_id = pq_pares[0]
+        pos_inicial = self.game.pares[primeiro_id][0]
         
-        print(f"Iniciando resolução...")
-        
+        # Tenta resolver. Se retornar True, marca sucesso.
         if self.solve(0, pos_inicial):
+            self.sucesso = True
             tempo = time.time() - self.start_time
-            print(f"\n✅ Solução encontrada em {tempo:.4f}s e {self.passos} passos!")
+            print(f"\n✅ Solução encontrada em {tempo:.2f}s e {self.passos} passos!")
             self.game.display()
         else:
-            print("\n❌ Não foi possível encontrar solução.")
-
-    def check_isolation(self, active_par_id):
-        """
-        HEURÍSTICA DE PODA (PRUNING):
-        Verifica se o movimento atual bloqueou acidentalmente o início ou fim 
-        de qualquer outro par que ainda não foi conectado.
-        
-        Retorna:
-            True: Se detectou que algum par ficou isolado (sem saída).
-            False: Se o grid continua viável.
-        """
-        for pid in self.pq_pares:
-            # Ignora o par que está sendo movido no momento
-            if pid == active_par_id: continue
-            
-            p1, p2 = self.game.pares[pid]
-            
-            # Verifica quantos vizinhos livres restam nos endpoints deste par
-            n1 = self.game.count_free_neighbors(p1[0], p1[1])
-            n2 = self.game.count_free_neighbors(p2[0], p2[1])
-            
-            # Se algum endpoint ficou com 0 vizinhos livres, o caminho está bloqueado
-            if n1 == 0 or n2 == 0:
-                return True 
-        return False
+            print(f"\n❌ Falha após {self.passos} passos.")
 
     def solve(self, par_index, pos_atual):
-        """
-        Algoritmo Recursivo Principal (Backtracking).
-        Tenta preencher o caminho para o par atual e, se sucesso, chama a si mesmo para o próximo.
-        """
-        draw_grid_live(self.game, delay=0.001)
+        # draw_grid_live(self.game.grid, delay=0.01)  # Visualização ao vivo, caso queria só descomente.
+        """Recursão principal (Backtracking)."""
         self.passos += 1
         
-        # Caso Base: Se o índice ultrapassou a lista, todos os pares foram resolvidos.
+        # Caso Base: Todos os pares resolvidos
         if par_index >= len(self.pq_pares):
             return True
 
         par_id = self.pq_pares[par_index]
         destino = self.game.pares[par_id][1]
 
-        # 1. Verifica se alcançou o destino do par atual
+        # 1. Verificação de Chegada
+        # Se alcançou o destino, encerra este par e inicia o próximo imediatamente.
         if pos_atual == destino:
-            # Se existem mais pares, inicia a busca para o próximo (par_index + 1)
             if par_index + 1 < len(self.pq_pares):
                 prox_id = self.pq_pares[par_index + 1]
                 prox_inicio = self.game.pares[prox_id][0]
                 return self.solve(par_index + 1, prox_inicio)
             else:
-                return True # Todos os pares conectados com sucesso
+                return True # Sucesso Total
 
-        # 2. Define movimentos possíveis: (delta_linha, delta_coluna)
+        # 2. Definição de Movimentos
         movimentos = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-        
-        # HEURÍSTICA DE ORDENAÇÃO:
-        # Ordena os movimentos pela distância Manhattan até o destino.
-        # Tenta ir na direção do objetivo primeiro, mas permite desvios se necessário.
+        # Heurística: Tenta ir na direção do alvo primeiro (A*)
         movimentos.sort(key=lambda m: abs((pos_atual[0]+m[0]) - destino[0]) + abs((pos_atual[1]+m[1]) - destino[1]))
 
         l, c = pos_atual
@@ -94,57 +62,67 @@ class Automato:
         for dl, dc in movimentos:
             nl, nc = l + dl, c + dc
             
-            # Verifica se a célula alvo é válida (vazia ou destino)
-            if self.game.is_valid_move(nl, nc, par_id):
-                
-                eh_destino = ((nl, nc) == destino)
-                
+            if not self.game.is_valid_move(nl, nc):
+                continue
+            
+            val_vizinho = self.game.grid[nl][nc]
+            eh_destino = ((nl, nc) == destino)
+
+            # Só move se for vazio ou se for o destino final
+            if val_vizinho == 0 or eh_destino:
                 if eh_destino:
-                    # Se chegou no destino, avança a recursão sem pintar a célula (já tem o ID)
+                    # Avança sem modificar o grid (destino é fixo)
                     if self.solve(par_index, (nl, nc)): return True
                 else:
-                    # --- APLICA MOVIMENTO (In-Place) ---
+                    # Aplica movimento (pinta célula)
                     self.game.grid[nl][nc] = par_id
                     
-                    # --- VERIFICAÇÃO DE PODA ---
-                    # Antes de prosseguir, verifica se esse passo "matou" outro par
-                    if not self.check_isolation(par_id):
-                        # Se não isolou ninguém, continua a recursão (Deep Search)
+                    # Poda: Verifica se o movimento quebrou a conectividade de outros pares
+                    if self.game.check_connectivity(par_id):
                         if self.solve(par_index, (nl, nc)):
                             return True
                     
-                    # --- BACKTRACKING ---
-                    # Se a recursão falhou ou houve isolamento, desfaz a alteração (limpa a célula)
+                    # Backtrack: Desfaz movimento se falhou
                     self.game.grid[nl][nc] = 0
-
+        
         return False
 
-# --- Configuração de Execução ---
+# --- Execução Principal ---
 if __name__ == "__main__":
-    # Exemplo de Puzzle 6x6
-    print("\n=== Puzzle NumberLink ===")
-    pares = {
-        1: [(0, 0), (4, 0)],
-        2: [(0, 4), (4, 4)],
-        3: [(2, 1), (2, 3)]
+    print("\n=== Puzzle NumberLink 8x8 (Random Restarts) ===")
+    
+    pares_8x8 = {
+        1: [(0, 0), (0, 3)], 
+        2: [(1, 0), (6, 0)], 
+        3: [(7, 1), (5, 4)], 
+        4: [(0, 7), (7, 6)], 
+        5: [(2, 2), (5, 5)], 
+        6: [(1, 4), (6, 3)], 
+        7: [(3, 1), (4, 6)], 
     }
 
-    # Inicializa Jogo e Fila de Prioridade
-    game = NumberLink(6, 6, pares)
-    pq = PriorityQueue()
+    # Configuração Inicial
+    game_ref = NumberLink(8, 8, pares_8x8)
+    lista_ids = list(game_ref.pares.keys())
+
+    # Heurística Inicial: Tenta resolver os caminhos mais longos primeiro
+    # (Calcula Distância Manhattan entre Início e Fim de cada par)
+    lista_ids.sort(key=lambda pid: abs(game_ref.pares[pid][0][0] - game_ref.pares[pid][1][0]) + 
+                                   abs(game_ref.pares[pid][0][1] - game_ref.pares[pid][1][1]), reverse=True)
+
+    MAX_TENTATIVAS = 100
     
-    # Preenche a fila baseada na distância dos pares
-    for par_id in game.pares.keys():
-        p1 = game.pares[par_id][0]
-        p2 = game.pares[par_id][1]
-        pq.enqueue(Node(p1, p2, par_id))
-
-    # Extrai ordem de resolução
-    pq_pares = []
-    while True:
-        node = pq.dequeue()
-        if node is None: break
-        pq_pares.append(node.id)
-
-    # Inicia o Autômato
-    automato = Automato(game, pq_pares)
+    for tentativa in range(1, MAX_TENTATIVAS + 1):
+        print(f"\n--- Tentativa #{tentativa} | Ordem: {lista_ids} ---")
+        
+        # Cria uma cópia limpa do jogo para esta tentativa
+        game_copia = NumberLink(8, 8, pares_8x8)
+        automato = Automato(game_copia, lista_ids)
+        
+        if automato.sucesso:
+            break
+        
+        print("Falha. Tentando nova permutação aleatória...")
+        random.shuffle(lista_ids) # Random Restart
+    else:
+        print("\nNão foi possível encontrar solução após todas as tentativas.")
