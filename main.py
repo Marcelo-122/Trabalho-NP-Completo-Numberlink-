@@ -89,18 +89,16 @@ class Automato:
 
 # --- Execução Principal ---
 if __name__ == "__main__":
-    print("\n=== Puzzle NumberLink 8x8 (Random Restarts) ===")
+    print("\n=== Puzzle NumberLink 8x8 ==")
     
     pares_8x8 = {
-        1: [(0, 0), (0, 3)], 
-        2: [(1, 0), (6, 0)], 
-        3: [(7, 1), (5, 4)], 
-        4: [(0, 7), (7, 6)], 
-        5: [(2, 2), (5, 5)], 
-        6: [(1, 4), (6, 3)], 
-        7: [(3, 1), (4, 6)], 
+        1: [(0, 0), (4, 4)], # Diagonal longa
+        2: [(0, 7), (3, 3)], # Diagonal oposta parcial
+        3: [(7, 0), (5, 2)], # Canto inferior esquerdo
+        4: [(7, 7), (5, 5)], # Canto inferior direito
+        5: [(2, 0), (6, 3)], # Meio esquerda -> baixo
+        6: [(1, 7), (4, 5)], # Meio direita -> centro
     }
-
     # Configuração Inicial
     game_ref = NumberLink(8, 8, pares_8x8)
     lista_ids = list(game_ref.pares.keys())
