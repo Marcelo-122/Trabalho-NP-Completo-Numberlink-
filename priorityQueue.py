@@ -3,9 +3,10 @@ class Node:
         self.id = id
         self.ponto_inicial = p1
         self.ponto_final = p2
-        self.dist = self.distancia_manhattan(p1,p2)
+        self.dist = Node.distancia_manhattan(p1,p2)
     
-    def distancia_manhattan(self, p1:tuple[int,int],p2:tuple[int,int]):
+    @staticmethod
+    def distancia_manhattan(p1:tuple[int,int],p2:tuple[int,int]):
         """
         Calcula distância de Manhattan entre dois pontos
         |x1 - x2| + |y1 - y2|

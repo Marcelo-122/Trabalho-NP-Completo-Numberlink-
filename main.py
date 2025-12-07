@@ -1,6 +1,6 @@
 from game import NumberLink
 from priorityQueue import PriorityQueue,Node
-
+import random
 class Automato:
     def __init__(self, game:NumberLink, pq_pares:list[int]):
         self.game = game
@@ -26,14 +26,16 @@ class Automato:
             if par_index == len(self.pq_pares)-1:
                 self.solucao = grid
                 return True
+            self.visited = set()
             next_start = self.game.pares[self.pq_pares[par_index+1]][0]
             return self.DFS([linha[:] for linha in grid], par_index + 1, next_start)
 
         actions = [self.game.esquerda, self.game.direita, self.game.cima, self.game.baixo]
-
+        
         for action in actions:
             try:
                 new_grid, cur_pos = action([linha[:] for linha in grid], pos_atual, par_id)
+                if(Node.distancia_manhattan(pos_atual, destino) < Node.distancia_manhattan(cur_pos, destino)): continue
             except:
                 continue
             
@@ -45,18 +47,19 @@ class Automato:
 # Puzzle 6x6 complexo
 print("\n\nPuzzle 6x6")
 pares3 = {
-    1: [(0, 1), (5, 1)],
-    2: [(1, 0), (1, 5)],
-    3: [(2, 2), (4, 4)],
-    4: [(0, 4), (3, 0)],
+    1: [(0, 0), (4, 0)],
+    2: [(0, 4), (4, 4)],
+    3: [(2, 1), (2, 3)]
 }
-game = NumberLink(6, 6, pares3)
 pq = PriorityQueue()
+game = NumberLink(7, 7, pares3)
 for par_id in game.pares.keys():
     p1 = game.pares[par_id][0]
     p2 = game.pares[par_id][1]
     pq.enqueue(Node(p1,p2,par_id))
 pq_pares = [pq.dequeue().id for _ in range(len(pq.items))]
+
+
 automato = Automato(game,pq_pares)
 if(automato.solucao != None):
     automato.game.display(automato.solucao)
