@@ -53,15 +53,16 @@ class NumberLink:
         """Verifica se posição está dentro dos limites"""
         return 0 <= x < self.n and 0 <= y < self.m
 
-# Puzzle 6x6 complexo
-print("\n\nPuzzle 6x6")
+# Puzzle 7x7 complexo
+print("\n\nPuzzle 7x7")
 pares3 = {
-    1: [(0, 1), (5, 1)],
-    2: [(1, 0), (1, 5)],
-    3: [(2, 2), (4, 4)],
-    4: [(0, 4), (3, 0)],
+    1: [(2, 4), (5, 2)],
+    2: [(1, 4), (6, 0)],
+    3: [(1, 1), (2, 3)],
+    4: [(0, 3), (6, 4)],
+    5: [(1, 5), (3, 3)],
 }
-puzzle3 = NumberLink(6, 6, pares3)
+puzzle3 = NumberLink(7, 7, pares3)
 puzzle3.display()
 
 print(puzzle3.distancia_manhattan((0, 1), (5, 1)))
